@@ -9,7 +9,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPub(this IServiceCollection services) =>
         services
-            .AddCommon()
             .AddTransient<IPub, Pub>()
             .AddTransient<IConfigurePub, ConfigurePub>();
     
@@ -18,7 +17,6 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddSub<THandler>(this IServiceCollection services) where THandler : class, ISubMessageHandler =>
         services
-            .AddCommon()
             .AddTransient<ISub, Sub>()
             .AddTransient<IConfigureSub, ConfigureSub>()
             // Register the publisher interface but forward it to the bus implementation
@@ -28,7 +26,4 @@ public static class ServiceCollectionExtensions
     
     public static async Task ConfigureSub(this IServiceProvider provider, Func<IConfigureSub, Task> configure) => 
         await configure(provider.GetRequiredService<IConfigureSub>());
-    private static IServiceCollection AddCommon(this IServiceCollection services) =>
-        services
-            .AddMemoryCache();
 }

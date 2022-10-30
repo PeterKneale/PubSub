@@ -15,7 +15,8 @@ using var host = Host.CreateDefaultBuilder(args)
             .AddPub()
             .AddLogging(c => {
                 c.AddSimpleConsole(opt => opt.SingleLine = true);
-            });
+            })
+            .AddMemoryCache();
     })
     .Build();
 
