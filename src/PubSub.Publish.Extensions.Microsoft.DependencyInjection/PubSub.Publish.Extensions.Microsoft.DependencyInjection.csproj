@@ -7,12 +7,15 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <RepositoryUrl>https://github.com/PeterKneale/PubSub</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>AWS;PubSub;Publish;Subscribe;SQS;SNS;netcore;</PackageTags>
     </PropertyGroup>
 
     <PropertyGroup>
         <PackageId>PubSub.Publish.Extensions.Microsoft.DependencyInjection</PackageId>
         <Authors>PeterKneale</Authors>
-        <Company>PeterKneale</Company>
+        <PackageDescription>An opinionated library simplifying the task of publishing and subscribing to events while using AWS SQS and SNS.</PackageDescription>
     </PropertyGroup>
     
     <ItemGroup>
