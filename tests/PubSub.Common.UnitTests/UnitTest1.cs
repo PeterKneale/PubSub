@@ -1,4 +1,4 @@
-namespace PubSub.UnitTests;
+namespace PubSub.Common.UnitTests;
 
 public class UnitTest1
 {

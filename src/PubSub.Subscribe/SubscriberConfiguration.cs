@@ -3,18 +3,24 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PubSub.Extensions;
+using PubSub.Common;
 
-namespace PubSub.Subscribing;
+namespace PubSub.Subscribe;
 
-internal class ConfigureSub : IConfigureSub
+public interface ISubscriberConfiguration
+{
+    Task<string> EnsureQueueExists(CancellationToken cancellationToken);
+    Task<string> EnsureDeadLetterQueueExists(CancellationToken cancellationToken);
+    Task EnsureSubscriptionExists<T>(CancellationToken cancellationToken);
+}
+public class SubscriberConfiguration : ISubscriberConfiguration
 {
     private readonly IAmazonSQS _sqs;
     private readonly IAmazonSimpleNotificationService _sns;
-    private readonly ILogger<ConfigureSub> _log;
+    private readonly ILogger<SubscriberConfiguration> _log;
     private readonly IConfiguration _configuration;
 
-    public ConfigureSub(IAmazonSQS sqs, IAmazonSimpleNotificationService sns, ILogger<ConfigureSub> log, IConfiguration configuration)
+    public SubscriberConfiguration(IAmazonSQS sqs, IAmazonSimpleNotificationService sns, ILogger<SubscriberConfiguration> log, IConfiguration configuration)
     {
         _sqs = sqs;
         _sns = sns;

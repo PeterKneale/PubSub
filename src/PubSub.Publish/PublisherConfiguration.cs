@@ -1,17 +1,22 @@
 ﻿using Amazon.SimpleNotificationService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PubSub.Extensions;
+using PubSub.Common;
 
-namespace PubSub.Publishing;
+namespace PubSub.Publish;
 
-internal class ConfigurePub : IConfigurePub
+public interface IPublisherConfiguration
+{
+    Task<string> EnsureTopicExists<T>(CancellationToken cancellationToken);
+}
+
+public class PublisherConfiguration : IPublisherConfiguration
 {
     private readonly IAmazonSimpleNotificationService _sns;
-    private readonly ILogger<ConfigurePub> _log;
+    private readonly ILogger<PublisherConfiguration> _log;
     private readonly IConfiguration _configuration;
 
-    public ConfigurePub(IAmazonSimpleNotificationService sns, ILogger<ConfigurePub> log, IConfiguration configuration)
+    public PublisherConfiguration(IAmazonSimpleNotificationService sns, ILogger<PublisherConfiguration> log, IConfiguration configuration)
     {
         _sns = sns;
         _log = log;

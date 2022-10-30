@@ -2,18 +2,22 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PubSub.Extensions;
+using PubSub.Common;
 
-namespace PubSub.Publishing;
+namespace PubSub.Publish;
 
-internal class Pub : IPub
+public interface IPublisher
+{
+    Task PublishToTopic<T>(string message, CancellationToken cancellationToken);
+}
+public class Publisher : IPublisher
 {
     private readonly IAmazonSimpleNotificationService _sns;
-    private readonly ILogger<Pub> _log;
+    private readonly ILogger<Publisher> _log;
     private readonly IMemoryCache _cache;
     private readonly IConfiguration _configuration;
 
-    public Pub(IAmazonSimpleNotificationService sns, ILogger<Pub> log, IMemoryCache cache, IConfiguration configuration)
+    public Publisher(IAmazonSimpleNotificationService sns, ILogger<Publisher> log, IMemoryCache cache, IConfiguration configuration)
     {
         _sns = sns;
         _log = log;

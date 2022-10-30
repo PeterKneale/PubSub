@@ -11,7 +11,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services
             .AddAWSService<IAmazonSQS>()
             .AddAWSService<IAmazonSimpleNotificationService>()
-            .AddSub<Handler>()
+            .AddSubscriber<Handler>()
             .AddLogging(c => {
                 c.AddSimpleConsole(opt => opt.SingleLine = true);
             })
@@ -19,8 +19,9 @@ using var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-await host.Services.ConfigureSub(async config => {
+await host.Services.ConfigureSubscriber(async config => {
     await config.EnsureQueueExists(CancellationToken.None);
+    await config.EnsureDeadLetterQueueExists(CancellationToken.None);
     await config.EnsureSubscriptionExists<OrderSubmittedEvent>(CancellationToken.None);
 });
 

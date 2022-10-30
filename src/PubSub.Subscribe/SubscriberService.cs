@@ -2,22 +2,22 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace PubSub.Subscribing;
+namespace PubSub.Subscribe;
 
-internal class SubService : BackgroundService
+public class SubscriberService : BackgroundService
 {
-    private readonly IConfigureSub _configure;
-    private readonly ISub _sub;
+    private readonly ISubscriberConfiguration _configure;
+    private readonly ISubscriber _subscriber;
     private readonly IServiceProvider _provider;
-    private readonly ILogger<SubService> _log;
+    private readonly ILogger<SubscriberService> _log;
     private readonly TimeSpan _queueErrorDelay = TimeSpan.FromSeconds(5);
     private readonly TimeSpan _queueEmptyDelay = TimeSpan.FromSeconds(5);
     private string _queueUrl = string.Empty;
 
-    public SubService(IConfigureSub configure, ISub sub, IServiceProvider provider, ILogger<SubService> log)
+    public SubscriberService(ISubscriberConfiguration configure, ISubscriber subscriber, IServiceProvider provider, ILogger<SubscriberService> log)
     {
         _configure = configure;
-        _sub = sub;
+        _subscriber = subscriber;
         _provider = provider;
         _log = log;
     }
@@ -62,17 +62,17 @@ internal class SubService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var messages = await _sub.GetMessagesFromQueue(stoppingToken);
+            var messages = await _subscriber.GetMessagesFromQueue(stoppingToken);
             if (messages.Any())
             {
                 foreach (var message in messages)
                 {
                     _log.LogInformation("Background service processing message {MessageId}", message.MessageId);
                     using var scope = _provider.CreateScope();
-                    var handler = scope.ServiceProvider.GetRequiredService<ISubMessageHandler>();
+                    var handler = scope.ServiceProvider.GetRequiredService<ISubscriberMessageHandler>();
 
                     await handler.Handle(message, stoppingToken);
-                    await _sub.DeleteMessageFromQueue(message.ReceiptHandle, stoppingToken);
+                    await _subscriber.DeleteMessageFromQueue(message.ReceiptHandle, stoppingToken);
                 }
             }
             else

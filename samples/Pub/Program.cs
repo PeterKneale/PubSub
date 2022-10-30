@@ -1,34 +1,34 @@
 ﻿using Amazon.SimpleNotificationService;
-using Amazon.SQS;
 using Messages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using PubSub;
+using PubSub.Publish;
 
-using var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services => {
-        services
-            .AddAWSService<IAmazonSQS>()
-            .AddAWSService<IAmazonSimpleNotificationService>()
-            .AddPub()
-            .AddLogging(c => {
-                c.AddSimpleConsole(opt => opt.SingleLine = true);
-            })
-            .AddMemoryCache();
-    })
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false)
     .Build();
 
+var provider = new ServiceCollection()
+    .AddSingleton<IConfiguration>(configuration)
+    .AddAWSService<IAmazonSimpleNotificationService>()
+    .AddPublisher()
+    .AddLogging(c => {
+        c.AddSimpleConsole(opt => opt.SingleLine = true);
+    })
+    .AddMemoryCache()
+    .BuildServiceProvider();
 
-await host.Services.ConfigurePub(async config => {
+await provider.ConfigurePublisher(async config => {
     await config.EnsureTopicExists<OrderSubmittedEvent>(CancellationToken.None);
 });
 
-var publisher = host.Services.GetRequiredService<IPub>();
-for (var i = 0; i < 100; i++)
-{
-    var json = JsonConvert.SerializeObject(new OrderSubmittedEvent {OrderId = Guid.NewGuid(), Amount = 1});
-    Console.WriteLine($"Publishing message {i} {json}");
-    await publisher.PublishToTopic<OrderSubmittedEvent>(json, CancellationToken.None);
-}
+var publisher = provider.GetRequiredService<IPublisher>();
+
+await Parallel.ForEachAsync(Enumerable.Range(0, 100), async (index, cancellationToken) => {
+    Console.WriteLine($"Publishing message {index}");
+    var message = new OrderSubmittedEvent {OrderId = Guid.NewGuid(), Amount = 1};
+    var json = JsonConvert.SerializeObject(message);
+    await publisher.PublishToTopic<OrderSubmittedEvent>(json, cancellationToken);
+});

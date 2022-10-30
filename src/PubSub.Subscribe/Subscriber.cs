@@ -3,18 +3,23 @@ using Amazon.SQS.Model;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PubSub.Extensions;
+using PubSub.Common;
 
-namespace PubSub.Subscribing;
+namespace PubSub.Subscribe;
 
-internal class Sub : ISub
+public interface ISubscriber
+{
+    Task<IReadOnlyCollection<Message>> GetMessagesFromQueue(CancellationToken cancellationToken);
+    Task DeleteMessageFromQueue(string receiptHandle, CancellationToken cancellationToken);
+}
+public class Subscriber : ISubscriber
 {
     private readonly IAmazonSQS _sqs;
-    private readonly ILogger<Sub> _log;
+    private readonly ILogger<Subscriber> _log;
     private readonly IMemoryCache _cache;
     private readonly IConfiguration _configuration;
 
-    public Sub(IAmazonSQS sqs, ILogger<Sub> log, IMemoryCache cache, IConfiguration configuration)
+    public Subscriber(IAmazonSQS sqs, ILogger<Subscriber> log, IMemoryCache cache, IConfiguration configuration)
     {
         _sqs = sqs;
         _log = log;

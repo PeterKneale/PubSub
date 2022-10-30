@@ -16,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\pubsub\PubSub.csproj" />
+    <ProjectReference Include="..\..\src\PubSub.Publish.Extensions.Microsoft.DependencyInjection\PubSub.Publish.Extensions.Microsoft.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\PubSub.Publish\PubSub.Publish.csproj" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
   </ItemGroup>
 

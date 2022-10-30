@@ -2,11 +2,11 @@
 using Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using PubSub;
+using PubSub.Subscribe;
 
 namespace Sub;
 
-public class Handler : ISubMessageHandler
+public class Handler : ISubscriberMessageHandler
 {
     private readonly ILogger<Handler> _log;
 
@@ -18,7 +18,7 @@ public class Handler : ISubMessageHandler
     public Task Handle(Message message, CancellationToken stoppingToken)
     {
         var order = JsonConvert.DeserializeObject<OrderSubmittedEvent>(message.Body);
-        _log.LogInformation("Received message {MessageBody} container order {OrderId}", message.Body, order.OrderId);
+        _log.LogDebug("Received message {MessageBody} container order {OrderId}", message.Body, order.OrderId);
         return Task.CompletedTask;
     }
 }

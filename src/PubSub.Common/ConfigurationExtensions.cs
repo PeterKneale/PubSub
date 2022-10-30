@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace PubSub.Extensions;
+namespace PubSub.Common;
 
 internal static class ConfigurationExtensions
 {
