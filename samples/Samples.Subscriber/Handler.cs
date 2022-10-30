@@ -17,8 +17,8 @@ public class Handler : ISubscriberMessageHandler
 
     public Task Handle(Message submittedMessage, CancellationToken stoppingToken)
     {
-        var order = JsonConvert.DeserializeObject<OrderCompletedEvent>(submittedMessage.Body);
-        _log.LogDebug("Order completed: {OrderId}", order.OrderId);
+        var orderCompletedEvent = JsonConvert.DeserializeObject<OrderCompletedEvent>(submittedMessage.Body);
+        _log.LogInformation("*** Completed order {OrderId}", orderCompletedEvent.OrderId);
         return Task.CompletedTask;
     }
 }

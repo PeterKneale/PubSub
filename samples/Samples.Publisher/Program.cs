@@ -26,7 +26,7 @@ await provider.ConfigurePublisher(async config => {
 
 var publisher = provider.GetRequiredService<IPublisher>();
 
-const int NumberToPublish = 1;
+const int NumberToPublish = 100;
 
 await Parallel.ForEachAsync(Enumerable.Range(0, NumberToPublish), async (index, cancellationToken) => {
     Console.WriteLine($"Publishing message {index}");
