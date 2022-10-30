@@ -6,17 +6,14 @@ namespace PubSub.Subscribe;
 
 public class SubscriberService : BackgroundService
 {
-    private readonly ISubscriberConfiguration _configure;
     private readonly ISubscriber _subscriber;
     private readonly IServiceProvider _provider;
     private readonly ILogger<SubscriberService> _log;
     private readonly TimeSpan _queueErrorDelay = TimeSpan.FromSeconds(5);
     private readonly TimeSpan _queueEmptyDelay = TimeSpan.FromSeconds(5);
-    private string _queueUrl = string.Empty;
 
-    public SubscriberService(ISubscriberConfiguration configure, ISubscriber subscriber, IServiceProvider provider, ILogger<SubscriberService> log)
+    public SubscriberService(ISubscriber subscriber, IServiceProvider provider, ILogger<SubscriberService> log)
     {
-        _configure = configure;
         _subscriber = subscriber;
         _provider = provider;
         _log = log;
@@ -25,8 +22,6 @@ public class SubscriberService : BackgroundService
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         _log.LogInformation("Background service starting");
-        _queueUrl = await _configure.EnsureQueueExists(cancellationToken);
-
         await base.StartAsync(cancellationToken);
     }
 
@@ -38,7 +33,6 @@ public class SubscriberService : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _log.LogInformation("Background service processing message from {QueueUrl}", _queueUrl);
         while (!stoppingToken.IsCancellationRequested)
         {
             try

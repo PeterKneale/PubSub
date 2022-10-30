@@ -9,8 +9,7 @@ namespace PubSub.Subscribe;
 
 public interface ISubscriberConfiguration
 {
-    Task<string> EnsureQueueExists(CancellationToken cancellationToken);
-    Task<string> EnsureDeadLetterQueueExists(CancellationToken cancellationToken);
+    Task<string> EnsureQueuesExist(CancellationToken cancellationToken);
     Task EnsureSubscriptionExists<T>(CancellationToken cancellationToken);
 }
 public class SubscriberConfiguration : ISubscriberConfiguration
@@ -20,6 +19,9 @@ public class SubscriberConfiguration : ISubscriberConfiguration
     private readonly ILogger<SubscriberConfiguration> _log;
     private readonly IConfiguration _configuration;
 
+    private const string MaxReceiveCount = "5";// This many attempts
+    private const string MessageRetentionPeriod = "1209600";// 14 days
+
     public SubscriberConfiguration(IAmazonSQS sqs, IAmazonSimpleNotificationService sns, ILogger<SubscriberConfiguration> log, IConfiguration configuration)
     {
         _sqs = sqs;
@@ -28,22 +30,33 @@ public class SubscriberConfiguration : ISubscriberConfiguration
         _configuration = configuration;
     }
 
-    public async Task<string> EnsureQueueExists(CancellationToken cancellationToken)
+    public async Task<string> EnsureQueuesExist(CancellationToken cancellationToken)
     {
-        var name = _configuration.GetQueueName();
-        _log.LogInformation("Ensuring sqs queue exists: {QueueName}", name);
-        var (exists, url) = await QueueExists(name, cancellationToken);
-        if (exists) return url!;
-        return await CreateQueue(name, cancellationToken);
-    }
+        // Setup source queue
+        var sourceName = _configuration.GetQueueName();
+        _log.LogInformation("Ensuring sqs queue exists: {QueueName}", sourceName);
+        var (sourceExists, sourceUrl) = await QueueExists(sourceName, cancellationToken);
+        if (!sourceExists)
+        {
+            sourceUrl = await CreateQueue(sourceName, cancellationToken);
+        }
+        await SetRetentionPeriod(sourceUrl!);
 
-    public async Task<string> EnsureDeadLetterQueueExists(CancellationToken cancellationToken)
-    {
-        var name = _configuration.GetDeadLetterQueueName();
-        _log.LogInformation("Ensuring sqs dead letter queue exists {QueueName}", name);
-        var (exists, url) = await QueueExists(name, cancellationToken);
-        if (exists) return url!;
-        return await CreateQueue(name, cancellationToken);
+        // Setup the dead letter queue
+        var deadName = _configuration.GetDeadLetterQueueName();
+        _log.LogInformation("Ensuring sqs dead letter queue exists {QueueName}", deadName);
+        var (deadExists, deadUrl) = await QueueExists(deadName, cancellationToken);
+        if (!deadExists)
+        {
+            deadUrl = await CreateQueue(deadName, cancellationToken);
+        }
+        await SetRetentionPeriod(deadUrl!);
+        
+        // Setup the redrive policy between from the source queue to the dead letter queue
+        _log.LogInformation("Ensuring sqs redrive policy exists");
+        await SetRedrivePolicy(sourceUrl!, deadUrl!, cancellationToken);
+
+        return sourceUrl!;
     }
 
     public async Task EnsureSubscriptionExists<T>(CancellationToken cancellationToken)
@@ -132,4 +145,27 @@ public class SubscriberConfiguration : ISubscriberConfiguration
         _log.LogInformation("A sns subscription exists for sns topic {TopicArn} to sqs queue {QueueUrl}: {SubscriptionArn}", topicArn, queueUrl, subscription.SubscriptionArn);
         return (true, subscription.SubscriptionArn);
     }
+
+    private async Task SetRedrivePolicy(string queueUrl, string deadUrl, CancellationToken cancellationToken)
+    {
+        var deadArn = await GetQueueArn(deadUrl, cancellationToken);
+        _log.LogInformation("Settings redrive policy from {QueueUrl} to {QueueName}", queueUrl, deadArn);
+        await SetUpdateAttribute(queueUrl, QueueAttributeName.RedrivePolicy, $"{{\"deadLetterTargetArn\":\"{deadArn}\",\"maxReceiveCount\":\"{MaxReceiveCount}\"}}");
+    }
+
+    private async Task SetRetentionPeriod(string queueUrl)
+    {
+        _log.LogInformation("Setting retention period for queue {QueueUrl}", queueUrl);
+        await SetUpdateAttribute(queueUrl, QueueAttributeName.MessageRetentionPeriod, MessageRetentionPeriod);
+    }
+
+    private async Task<string> GetQueueArn(string? deadUrl, CancellationToken cancellationToken)
+    {
+        var response = await _sqs.GetQueueAttributesAsync(deadUrl, new List<string> {QueueAttributeName.QueueArn}, cancellationToken);
+        var deadArn = response.QueueARN;
+        return deadArn;
+    }
+
+    private async Task SetUpdateAttribute(string url, QueueAttributeName attribute, string value) =>
+        await _sqs.SetQueueAttributesAsync(url, new Dictionary<string, string> {{attribute.Value, value}});
 }

@@ -15,8 +15,7 @@ public static class ServiceCollectionExtensions
     public static async Task ConfigureSubscriber(this IServiceProvider provider, Func<ISubscriberConfiguration, Task> configure)
     {
         var config = provider.GetRequiredService<ISubscriberConfiguration>();
-        await config.EnsureQueueExists(CancellationToken.None);
-        await config.EnsureDeadLetterQueueExists(CancellationToken.None);
+        await config.EnsureQueuesExist(CancellationToken.None);
         await configure(config);
     }
 }
