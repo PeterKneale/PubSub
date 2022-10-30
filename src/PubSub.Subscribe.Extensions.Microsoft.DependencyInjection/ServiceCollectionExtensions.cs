@@ -12,10 +12,6 @@ public static class ServiceCollectionExtensions
             .AddTransient<ISubscriberMessageHandler, THandler>()
             .AddHostedService<SubscriberService>();
 
-    public static async Task ConfigureSubscriber(this IServiceProvider provider, Func<ISubscriberConfiguration, Task> configure)
-    {
-        var config = provider.GetRequiredService<ISubscriberConfiguration>();
-        await config.EnsureQueuesExist(CancellationToken.None);
-        await configure(config);
-    }
+    public static async Task ConfigureSubscriber(this IServiceProvider provider, Func<ISubscriberConfiguration, Task> configure) => 
+        await configure(provider.GetRequiredService<ISubscriberConfiguration>());
 }
