@@ -4,5 +4,5 @@ namespace PubSub.Subscribe;
 
 public interface ISubscriberMessageHandler
 {
-    Task Handle(Message message, CancellationToken cancellationToken);
+    Task Handle(Message submittedMessage, CancellationToken cancellationToken);
 }

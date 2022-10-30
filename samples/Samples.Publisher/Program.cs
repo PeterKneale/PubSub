@@ -1,10 +1,10 @@
 ﻿using Amazon.SimpleNotificationService;
-using Messages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PubSub.Publish;
+using Samples.Messages;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: false)
@@ -26,19 +26,14 @@ await provider.ConfigurePublisher(async config => {
 
 var publisher = provider.GetRequiredService<IPublisher>();
 
-// demo publish in series
-for (var index = 0; index <= 100; index++)
-{
-    Console.WriteLine($"Publishing message {index}");
-    var message = new OrderSubmittedEvent {OrderId = Guid.NewGuid(), Amount = index};
-    var json = JsonConvert.SerializeObject(message);
-    await publisher.PublishToTopic<OrderSubmittedEvent>(json, CancellationToken.None);
-}
+const int NumberToPublish = 1;
 
-// demo publish in parallel
-await Parallel.ForEachAsync(Enumerable.Range(0, 100), async (index, cancellationToken) => {
+await Parallel.ForEachAsync(Enumerable.Range(0, NumberToPublish), async (index, cancellationToken) => {
     Console.WriteLine($"Publishing message {index}");
-    var message = new OrderSubmittedEvent {OrderId = Guid.NewGuid(), Amount = index};
-    var json = JsonConvert.SerializeObject(message);
-    await publisher.PublishToTopic<OrderSubmittedEvent>(json, cancellationToken);
+    await publisher.PublishToTopic<OrderSubmittedEvent>(BuildMessage(), cancellationToken);
 });
+
+string BuildMessage()
+{
+    return JsonConvert.SerializeObject(new OrderSubmittedEvent {OrderId = Guid.NewGuid()});
+}

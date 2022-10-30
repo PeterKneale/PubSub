@@ -1,10 +1,10 @@
 ﻿using Amazon.SQS.Model;
-using Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PubSub.Subscribe;
+using Samples.Messages;
 
-namespace Sub;
+namespace Samples.Subscriber;
 
 public class Handler : ISubscriberMessageHandler
 {
@@ -15,10 +15,10 @@ public class Handler : ISubscriberMessageHandler
         _log = log;
     }
 
-    public Task Handle(Message message, CancellationToken stoppingToken)
+    public Task Handle(Message submittedMessage, CancellationToken stoppingToken)
     {
-        var order = JsonConvert.DeserializeObject<OrderSubmittedEvent>(message.Body);
-        _log.LogDebug("Received message {MessageBody} container order {OrderId}", message.Body, order.OrderId);
+        var order = JsonConvert.DeserializeObject<OrderCompletedEvent>(submittedMessage.Body);
+        _log.LogDebug("Order completed: {OrderId}", order.OrderId);
         return Task.CompletedTask;
     }
 }

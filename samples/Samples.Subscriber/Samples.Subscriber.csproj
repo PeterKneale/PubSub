@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PubSub.Publish.Extensions.Microsoft.DependencyInjection\PubSub.Publish.Extensions.Microsoft.DependencyInjection.csproj" />
-    <ProjectReference Include="..\..\src\PubSub.Publish\PubSub.Publish.csproj" />
-    <ProjectReference Include="..\Messages\Messages.csproj" />
+    <ProjectReference Include="..\..\src\PubSub.Subscribe.Extensions.Microsoft.DependencyInjection\PubSub.Subscribe.Extensions.Microsoft.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\PubSub.Subscribe\PubSub.Subscribe.csproj" />
+    <ProjectReference Include="..\Samples.Messages\Samples.Messages.csproj" />    
   </ItemGroup>
 
   <ItemGroup>
@@ -26,4 +26,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
 </Project>
