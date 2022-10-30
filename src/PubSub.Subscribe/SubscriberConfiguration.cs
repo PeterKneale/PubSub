@@ -64,17 +64,14 @@ public class SubscriberConfiguration : ISubscriberConfiguration
             throw new Exception($"Queue does not exist: {queueName}");
         }
 
-        var subscription = await SubscriptionExists(topicArn!, queueUrl!, cancellationToken);
-        if (subscription.exists) return;
-
-        _log.LogInformation("Subscribing sqs queue {QueueUrl} to sns topic {TopicArn}", queueUrl!, topicArn);
-        var response = await _sns.SubscribeQueueToTopicsAsync(new List<string> {topicArn!}, _sqs, queueUrl!);
-        var subscriptionArn = response.Values.SingleOrDefault();
-        if (subscriptionArn == null)
+        var (subscriptionExists, subscriptionArn) = await SubscriptionExists(topicArn!, queueUrl!, cancellationToken);
+        if (!subscriptionExists)
         {
-            throw new Exception($"Subscription arn not returned when subscribing sqs queue {queueUrl} to sns topic {topicArn}");
+            _log.LogInformation("Subscribing sqs queue {QueueUrl} to sns topic {TopicArn}", queueUrl!, topicArn);
+            var response = await _sns.SubscribeQueueToTopicsAsync(new List<string> {topicArn!}, _sqs, queueUrl!);
+            subscriptionArn = response.Values.Single();
         }
-        
+
         _log.LogInformation("Setting attributes on subscription {SubscriptionArn}", subscriptionArn);
         await _sns.SetSubscriptionAttributesAsync(subscriptionArn, "RawMessageDelivery", "true", cancellationToken);
     }
