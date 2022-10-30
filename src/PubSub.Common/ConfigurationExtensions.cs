@@ -4,6 +4,9 @@ namespace PubSub.Common;
 
 internal static class ConfigurationExtensions
 {
+    const string PubSubPrefix = "pubsub:prefix";
+    const string PubSubService = "pubsub:service";
+
     private const int MaxTopicNameLength = 256;
     private const int MaxQueueNameLength = 80;
 
@@ -26,10 +29,10 @@ internal static class ConfigurationExtensions
             .TrimTo(MaxQueueNameLength);
 
     private static string Prefix(this IConfiguration configuration) =>
-        configuration["pubsub:prefix"] ?? throw new Exception("Configuration setting 'bus:prefix' is missing");
+        configuration[PubSubPrefix] ?? throw new Exception($"Configuration setting '{PubSubPrefix}' is missing");
 
     private static string Service(this IConfiguration configuration) =>
-        configuration["pubsub:service"] ?? throw new Exception("Configuration setting 'bus:service' is missing");
+        configuration[PubSubService] ?? throw new Exception($"Configuration setting '{PubSubService}' is missing");
 
     private static string TrimTo(this string s, int maximumLength) =>
         s.Length <= maximumLength
