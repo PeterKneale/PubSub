@@ -1,0 +1,6 @@
+# See https://github.com/p4tin/goaws
+Local:                         
+  Host: aws
+  Region: ap-southeast-2
+  AccountId: "100010001000"
+  
